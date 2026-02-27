@@ -16,17 +16,31 @@
 
 .main {
   display: flex;
-  flex-direction: column;
   gap: 15px;
-  max-width: 800px;
-  width: 100%;
+  max-width: calc(100% - 16px);
   padding: 15px 0 0 0;
   border-radius: 15px;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
+.main__label {
+  padding: 12px 0;
+}
+.main__params {
+  display: none;
+}
+.main__params--visible {
+  display: block;
+  animation: fadeIn 0.4s ease forwards;
+}
+.main__labels {
+  margin-top: 24px;
+  padding-left: 12px;
+  padding-right: 96px;
+  border-left: 2px solid #6FC276;
+}
 .main__header {
-  margin-bottom: 18px;
+  margin-bottom: 15px;
   text-transform: uppercase;
 }
 .main__empty-image {
@@ -43,8 +57,10 @@
   text-align: center;
 }
 .main__wrapper {
-  max-width: 900px;
+  max-width: 800px;
+  width: 100%;
   padding: 15px;
+  border-radius: 15px;
 }
 .main__preview {
   width: 100%;
