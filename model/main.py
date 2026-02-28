@@ -18,7 +18,7 @@ pixels_per_cm = calculate_ppc_from_chessboard(
 )
 
 img = auto_orient('wheat_20260219135826028(1).jpg')
-results = model.predict(img, conf=0.25, save=True)
+results = model.predict(img, conf=0.25)
 measurements = measure_objects(results)
 
 for m in measurements:
