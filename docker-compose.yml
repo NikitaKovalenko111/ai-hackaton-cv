@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   yolo-api:
-    build: .
+    build:
+      context: ./model
+      dockerfile: Dockerfile
     container_name: yolo-detection-api
     ports:
       - "8080:8080"
