@@ -1,3 +1,5 @@
+import base64
+
 import numpy as np
 import cv2
 import glob
@@ -14,13 +16,13 @@ def measure_objects(results, class_names={0: 'leaf', 1: 'root', 2: 'stem'}):
             conf=True,
             line_width=2,
             font_size=13,
-            box=True,
-            labels=True,
-            colors=None
+            boxes=True,
+            labels=True
         )
 
         _, buffer = cv2.imencode(".jpg", plotted_image)
         jpg_bytes = buffer.tobytes()
+        image_base64 = base64.b64encode(jpg_bytes).decode("utf-8")
         
         for mask, cls, conf in zip(masks, classes, confidences):
             max_length = 0
@@ -39,7 +41,7 @@ def measure_objects(results, class_names={0: 'leaf', 1: 'root', 2: 'stem'}):
                 'polygon': mask
             })
     
-    return measurements, jpg_bytes
+    return measurements, image_base64
 
 def calibrate_camera(calibration_images_folder, chessboard_size=(4, 7)):   
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 

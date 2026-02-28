@@ -1,9 +1,10 @@
 import asyncio
 import io
+from pathlib import Path
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
-from pydantic import BaseModel
+from pydantic import BaseModel, field_serializer
 from typing import List
 from ultralytics import YOLO
 from utils.model_math import measure_objects, calculate_ppc_from_chessboard
@@ -22,8 +23,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-print("Загрузка модели YOLO...")
-model = YOLO('model/runs/segment/plant_seg_v1/weights/best.pt')
+BASE_DIR = Path(__file__).resolve().parent
+
+WEIGHTS_PATH = BASE_DIR / "runs" / "segment" / "plant_seg_v14" / "weights" / "best.pt"
+
+if not WEIGHTS_PATH.exists():
+    raise FileNotFoundError(f"Модель не найдена по пути: {WEIGHTS_PATH}")
+
+print(f"Загрузка модели из: {WEIGHTS_PATH}")
+
+model = YOLO(str(WEIGHTS_PATH))
+
 print("Модель загружена!")
 
 class DetectionBox(BaseModel):
@@ -31,6 +41,12 @@ class DetectionBox(BaseModel):
     length_px: float
     length_cm: float
     confidence: float
+
+    @field_serializer('length_px', 'length_cm', 'confidence')
+    def round_floats(self, value: float) -> float:
+        if value is None:
+            return None
+        return round(value, 2)
 
 
 class PredictionResponse(BaseModel):
@@ -55,7 +71,9 @@ async def predict(file: UploadFile = File(...)):
             square_size_cm=1.0
         )
 
-        img = auto_orient(image)
+        # img = auto_orient(image)
+        img = image
+
         results = await asyncio.to_thread(model.predict, img, conf=0.25)
         measurements, jpg_bytes = measure_objects(results)
 
@@ -85,4 +103,4 @@ async def predict(file: UploadFile = File(...)):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="localhost", port=8000)

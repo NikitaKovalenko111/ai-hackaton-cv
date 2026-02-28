@@ -6,4 +6,5 @@ python-multipart
 ultralytics
 pillow
 numpy
+python-dotenv
 
