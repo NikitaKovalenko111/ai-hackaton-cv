@@ -16,7 +16,8 @@ RUN pip install --no-cache-dir \
     torchaudio==2.7.1 \
     --index-url https://download.pytorch.org/whl/cu118
 
-COPY requirements.txt .
+COPY model/requirements.txt ./model/requirements.txt
+
 RUN pip install --no-cache-dir -r ./model/requirements.txt
 
 COPY .. .
