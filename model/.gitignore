@@ -2,3 +2,5 @@
 dataset
 yolo11n-seg.pt
 .env
+runs
+__pycache__
