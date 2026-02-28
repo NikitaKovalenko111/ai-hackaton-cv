@@ -7,17 +7,17 @@ from dotenv import load_dotenv
 
 load_dotenv('.env')
 
-model = YOLO('model/runs/segment/plant_seg_v1/weights/best.pt')
+model = YOLO('./runs/segment/plant_seg_v14/weights/best.pt')
 
 print("Модель загружена!")
 
 pixels_per_cm = calculate_ppc_from_chessboard(
-    'model/dataset/calibrate/calib_10.jpg',
+    './dataset/calibrate/calib_10.jpg',
     chessboard_size=(4, 7),
     square_size_cm=1.0
 )
 
-img = auto_orient('wheat_20260219135826028(1).jpg')
+img = auto_orient('arugula_20260219162931907.jpg')
 results = model.predict(img, conf=0.25, save=True)
 measurements = measure_objects(results)
 
