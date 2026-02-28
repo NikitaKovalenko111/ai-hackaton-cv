@@ -19,6 +19,7 @@ pixels_per_cm = calculate_ppc_from_chessboard(
 
 img = auto_orient('arugula_20260219162931907.jpg')
 results = model.predict(img, conf=0.25, save=True)
+
 measurements = measure_objects(results)
 
 for m in measurements:

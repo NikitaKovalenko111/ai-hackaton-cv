@@ -16,7 +16,8 @@ def train_model():
         save=True,
         project='model/runs/segment',
         name='plant_seg_v1',
-        verbose=True
+        verbose=True,
+        close_mosaic=10
     )
 
     print("Обучение завершено!")
