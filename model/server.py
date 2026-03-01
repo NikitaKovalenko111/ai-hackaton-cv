@@ -25,7 +25,7 @@ app.add_middleware(
 
 BASE_DIR = Path(__file__).resolve().parent
 
-WEIGHTS_PATH = BASE_DIR / "runs" / "segment" / "plant_seg_v22" / "weights" / "best.pt"
+WEIGHTS_PATH = BASE_DIR / "runs" / "segment" / "plant_seg_v2" / "weights" / "best.pt"
 
 if not WEIGHTS_PATH.exists():
     raise FileNotFoundError(f"Модель не найдена по пути: {WEIGHTS_PATH}")
