@@ -2,22 +2,22 @@ from ultralytics import YOLO
 import os
 
 def train_model():
-    model = YOLO('yolo11n-seg.pt')
+    model = YOLO('yolo11s-seg.pt')
 
     results = model.train(
-        data='model/dataset/data.yaml',
-        epochs=os.environ.get('TRAIN_EPOCHS'),
-        imgsz=os.environ.get('TRAIN_IMGSZ'),
-        batch=os.environ.get('TRAIN_BATCH'),
-        device=os.environ.get('TRAIN_DEVICE'),
-        workers=os.environ.get('TRAIN_WORKERS'),
+        data='./dataset/data.yaml',
+        epochs=150,
+        imgsz=640,
+        batch=4,
+        device=0,
+        workers=8,
         optimizer='Adam',
-        patience=os.environ.get('TRAIN_PATIENCE'),
+        patience=50,
         save=True,
-        project='model/runs/segment',
-        name='plant_seg_v1',
+        project='./runs/segment',
+        name='plant_seg_v2',
         verbose=True,
-        close_mosaic=10
+        close_mosaic=10,
     )
 
     print("Обучение завершено!")

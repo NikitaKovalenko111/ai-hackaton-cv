@@ -65,8 +65,10 @@ async def predict(file: UploadFile = File(...)):
         contents = await file.read()
         image = Image.open(io.BytesIO(contents)).convert("RGB")
 
+        File = BASE_DIR / "dataset" / "calibrate" / "calib_10.jpg"
+
         pixels_per_cm = calculate_ppc_from_chessboard(
-            'model/dataset/calibrate/calib_10.jpg',
+            File,
             chessboard_size=(4, 7),
             square_size_cm=1.0
         )
@@ -75,7 +77,7 @@ async def predict(file: UploadFile = File(...)):
 
         img = auto_orient(image)
 
-        results = await asyncio.to_thread(model.predict, img, conf=0.25)
+        results = await asyncio.to_thread(model.predict, img, conf=0.25, max_det=1)
         measurements, jpg_bytes = measure_objects(results)
 
         detections = []
@@ -103,4 +105,4 @@ async def predict(file: UploadFile = File(...)):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="localhost", port=8080)
+    uvicorn.run(app, host="0.0.0.0", port=8080)

@@ -4,3 +4,6 @@ yolo11n-seg.pt
 .env
 runs
 __pycache__
+yolo11m-seg.pt
+yolo11s-seg.pt
+yolo26n.pt
