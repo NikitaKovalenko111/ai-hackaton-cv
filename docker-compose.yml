@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  yolo-api:
+    build:
+      context: ./model
+      dockerfile: Dockerfile
+    container_name: yolo-detection-api
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./model:/app/model
+      - ./.env:/app/.env
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
