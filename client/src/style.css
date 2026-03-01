@@ -7,15 +7,7 @@
 .container {
   max-width: 1170px;
   margin: 0 auto;
-  height: 100vh;
-  overflow: hidden;
-}
-@media screen and (max-width: 1120px) {
-  .container {
-    height: 100%;
-  }
-}
-.container {
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -23,15 +15,9 @@
 
 .main {
   display: flex;
-  gap: 15px;
+  gap: 24px;
   max-width: calc(100% - 16px);
-}
-@media screen and (max-width: 1120px) {
-  .main {
-    flex-direction: column;
-  }
-}
-.main {
+  flex-direction: column;
   padding: 15px 0 0 0;
   border-radius: 15px;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
