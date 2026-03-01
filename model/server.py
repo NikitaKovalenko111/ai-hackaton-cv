@@ -77,7 +77,7 @@ async def predict(file: UploadFile = File(...)):
 
         img = auto_orient(image)
 
-        results = await asyncio.to_thread(model.predict, img, conf=0.3, save=True)
+        results = await asyncio.to_thread(model.predict, img, conf=0.3, save=True, imgsz=640)
         measurements, jpg_bytes = measure_objects(results)
 
         detections = []
