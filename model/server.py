@@ -25,7 +25,7 @@ app.add_middleware(
 
 BASE_DIR = Path(__file__).resolve().parent
 
-WEIGHTS_PATH = BASE_DIR / "runs" / "segment" / "plant_seg_v14" / "weights" / "best.pt"
+WEIGHTS_PATH = BASE_DIR / "runs" / "segment" / "plant_seg_v22" / "weights" / "best.pt"
 
 if not WEIGHTS_PATH.exists():
     raise FileNotFoundError(f"Модель не найдена по пути: {WEIGHTS_PATH}")
@@ -68,7 +68,7 @@ async def predict(file: UploadFile = File(...)):
         File = BASE_DIR / "dataset" / "calibrate" / "calib_10.jpg"
 
         pixels_per_cm = calculate_ppc_from_chessboard(
-            File,
+            str(File),
             chessboard_size=(4, 7),
             square_size_cm=1.0
         )
@@ -77,7 +77,7 @@ async def predict(file: UploadFile = File(...)):
 
         img = auto_orient(image)
 
-        results = await asyncio.to_thread(model.predict, img, conf=0.25, max_det=1)
+        results = await asyncio.to_thread(model.predict, img, conf=0.3, save=True)
         measurements, jpg_bytes = measure_objects(results)
 
         detections = []
