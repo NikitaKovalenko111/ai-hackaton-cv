@@ -10,6 +10,10 @@
     height: 100vh;
     overflow: hidden;
 
+    @media screen and (max-width: 1120px) {
+        height: 100%;
+    }
+
     display: flex;
     justify-content: center;
     align-items: center;
@@ -19,6 +23,10 @@
     display: flex;
     gap: 15px;
     max-width: calc(100% - 16px);
+
+    @media screen and (max-width: 1120px) {
+        flex-direction: column;
+    }
 
     padding: 15px 0 0 0;
     border-radius: 15px;
@@ -36,6 +44,11 @@
         &--visible {
             display: block;
             animation: fadeIn 0.4s ease forwards;
+
+            @media screen and (max-width: 1120px) {
+                display: flex;
+                gap: 24px;
+            }
         }
     }
 
@@ -69,7 +82,6 @@
 
     &__wrapper {
         max-width: 800px;
-        width: 100%;
         padding: 15px;
 
         border-radius: 15px;

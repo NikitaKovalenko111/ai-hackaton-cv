@@ -2,6 +2,7 @@ import { useCallback, useState, type ReactEventHandler } from 'react';
 import cn from 'classnames';
 import './style.css'
 import { useDropzone } from 'react-dropzone';
+import img from './assets/wheat_20260219161454681.jpg'
 
 function App() {
   const [file, setFile] = useState<string | null>(null)
@@ -45,24 +46,27 @@ function App() {
           </div>
           <button className='main__send-button' onClick={sendHandler}>Отправить</button>
         </div>
-        <div className={cn('main_wrapper', 'main__params', {'main__params--visible': isVisible})}>
-          <h2 className="main_header">Параметры</h2>
-          <div className="main__labels">
-            <div className="main__label">
-              <h3>Тип растения:</h3>
-              <span>Пшеница</span>
-            </div>
-            <div className="main__label">
-              <h3>Длина корня:</h3>
-              <span>5 см</span>
-            </div>
-            <div className="main__label">
-              <h3>Длина стебля:</h3>
-              <span>6 см</span>
-            </div>
-            <div className="main__label">
-              <h3>Площадь листиков:</h3>
-              <span>12 см^2</span>
+        <div className={cn('main__wrapper', 'main__params', {'main__params--visible': isVisible})}>
+          <img className='main__prediction' width="400px" src={img} alt="Разметка изображения" />
+          <div>
+            <h2 className="main_header">Параметры</h2>
+            <div className="main__labels">
+              <div className="main__label">
+                <h3>Тип растения:</h3>
+                <span>Пшеница</span>
+              </div>
+              <div className="main__label">
+                <h3>Длина корня:</h3>
+                <span>5 см</span>
+              </div>
+              <div className="main__label">
+                <h3>Длина стебля:</h3>
+                <span>6 см</span>
+              </div>
+              <div className="main__label">
+                <h3>Площадь листиков:</h3>
+                <span>12 см^2</span>
+              </div>
             </div>
           </div>
         </div>
