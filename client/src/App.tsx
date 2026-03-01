@@ -25,6 +25,7 @@ function App() {
 
   const sendHandler = async () => {
     if (byteFile != null) {
+      setIsVisible(false)
       setIsLoading(true)
       await getPrediction(byteFile, setDetections, setLabeledFile).then(() => {
         setIsVisible(true)
@@ -89,7 +90,7 @@ function App() {
           {
             labeledFile != null &&
             (
-              <img className='main__prediction' width="400px" src={labeledFile} alt="Разметка изображения" />
+              <img className='main__prediction' width="400px" height="400px" src={labeledFile} alt="Разметка изображения" />
             )
           }
           <div className='main__labels-wrapper'>
