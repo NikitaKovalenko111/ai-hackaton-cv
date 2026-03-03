@@ -1,6 +1,6 @@
 FROM python:3.10-slim
 
-WORKDIR /app
+WORKDIR /model
 
 RUN apt-get update && apt-get install -y \
     libgl1 \
@@ -26,4 +26,4 @@ ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8080
 
-CMD ["python", "model/server.py"]
+CMD ["python", "server.py"]

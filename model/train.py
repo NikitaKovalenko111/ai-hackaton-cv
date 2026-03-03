@@ -2,20 +2,20 @@ from ultralytics import YOLO
 import os
 
 def train_model():
-    model = YOLO('yolo11n-seg.pt')
+    model = YOLO('yolo11s-seg.pt')
 
     results = model.train(
-        data='model/dataset/data.yaml',
-        epochs=100,
+        data='./dataset/data.yaml',
+        epochs=150,
         imgsz=640,
-        batch=8,
+        batch=4,
         device=0,
-        workers=0,
-        optimizer='auto',
+        workers=8,
+        optimizer='Adam',
         patience=50,
         save=True,
-        project='model/runs/segment',
-        name='plant_seg_v1',
+        project='./runs/segment',
+        name='plant_seg_v2',
         verbose=True,
         close_mosaic=10,
 
