@@ -18,6 +18,14 @@ def train_model():
         name='plant_seg_v2',
         verbose=True,
         close_mosaic=10,
+
+        mosaic=0.5,
+        copy_paste=0.3,
+        flipud=0.0,
+        fliplr=0.5,
+        hsv_h=0.015,
+        hsv_s=0.3,
+        hsv_v=0.2,
     )
 
     print("Обучение завершено!")

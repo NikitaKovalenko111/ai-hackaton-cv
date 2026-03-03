@@ -7,3 +7,4 @@ __pycache__
 yolo11m-seg.pt
 yolo11s-seg.pt
 yolo26n.pt
+classificator/dataset_measurements.csv
