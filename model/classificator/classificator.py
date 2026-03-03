@@ -81,6 +81,35 @@ def create_dataset_csv(dataset_dir, output_csv='./dataset_measurements.csv',
     
     return df
 
+def prepare_data(data, pixels_per_cm=70):
+    data = data[0]
+
+    row = {}
+
+    for m in data:
+        if m['class'] == 'root':
+            row['root_length'] = m['length_px'] / pixels_per_cm
+            row['root_area'] = m['area_px'] / (pixels_per_cm**2)
+            if row['root_area'] != 0:
+                row['root_length_area_ratio'] = row['root_length'] / row['root_area']
+        if m['class'] == 'stem':
+            row['stem_length'] = m['length_px'] / pixels_per_cm
+            row['stem_area'] = m['area_px'] / (pixels_per_cm**2)
+            if row['stem_area'] != 0:
+                row['stem_length_area_ratio'] = row['stem_length'] / row['stem_area']
+        if m['class'] == 'leaf':
+            row['leaf_length'] = m['length_px'] / pixels_per_cm
+            row['leaf_area'] = m['area_px'] / (pixels_per_cm**2)
+            if row['leaf_area'] != 0:
+                row['leaf_length_area_ratio'] = row['leaf_length'] / row['leaf_area']
+
+        if hasattr(row, 'leaf_length') and hasattr(row, 'stem_length'):
+            row['leaf_stem_length_ratio'] = row['leaf_length'] / row['stem_length']
+
+    X = pd.DataFrame(row)
+
+    return X
+
 def process_dataset(dataset_path):
     df = pd.read_csv(dataset_path)
 
