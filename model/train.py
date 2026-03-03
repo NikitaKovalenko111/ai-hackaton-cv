@@ -6,18 +6,26 @@ def train_model():
 
     results = model.train(
         data='model/dataset/data.yaml',
-        epochs=os.environ.get('TRAIN_EPOCHS'),
-        imgsz=os.environ.get('TRAIN_IMGSZ'),
-        batch=os.environ.get('TRAIN_BATCH'),
-        device=os.environ.get('TRAIN_DEVICE'),
-        workers=os.environ.get('TRAIN_WORKERS'),
-        optimizer='Adam',
-        patience=os.environ.get('TRAIN_PATIENCE'),
+        epochs=100,
+        imgsz=640,
+        batch=8,
+        device=0,
+        workers=0,
+        optimizer='auto',
+        patience=50,
         save=True,
         project='model/runs/segment',
         name='plant_seg_v1',
         verbose=True,
-        close_mosaic=10
+        close_mosaic=10,
+
+        mosaic=0.5,
+        copy_paste=0.3,
+        flipud=0.0,
+        fliplr=0.5,
+        hsv_h=0.015,
+        hsv_s=0.3,
+        hsv_v=0.2,
     )
 
     print("Обучение завершено!")
