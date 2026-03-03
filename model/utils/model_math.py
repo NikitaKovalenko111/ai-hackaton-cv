@@ -3,6 +3,38 @@ import numpy as np
 import cv2
 import glob
 from pathlib import Path
+from skimage.morphology import medial_axis
+from scipy.spatial import cKDTree
+
+def create_binary_mask(polygon, img_shape):
+    h, w = img_shape
+    binary = np.zeros((h, w), dtype=np.uint8)
+    cv2.fillPoly(binary, [polygon.astype(np.int32)], 255)
+    return binary
+
+def skeletonize_mask(binary_mask):
+    kernel = np.ones((3, 3), np.uint8)
+    cleaned = cv2.morphologyEx(binary_mask, cv2.MORPH_OPEN, kernel, iterations=1)
+    
+    skeleton = cv2.ximgproc.thinning(
+        cleaned, 
+        thinningType=cv2.ximgproc.THINNING_ZHANGSUEN
+    )
+    
+    return skeleton
+
+def calculate_skeleton_length(skeleton):
+    return cv2.countNonZero(skeleton)
+
+def calculate_polygon_area(polygon: np.ndarray) -> float:
+    if len(polygon) < 3:
+        return 0.0
+    
+    x = polygon[:, 0]
+    y = polygon[:, 1]
+
+    area = 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
+    return float(area)
 
 def measure_objects(results, class_names={0: 'leaf', 1: 'root', 2: 'stem'}):
     measurements = []
@@ -24,22 +56,32 @@ def measure_objects(results, class_names={0: 'leaf', 1: 'root', 2: 'stem'}):
         image_base64 = base64.b64encode(jpg_bytes).decode("utf-8")
         
         for mask, cls, conf in zip(masks, classes, confidences):
-            max_length = 0
-            for i in range(len(mask)):
-                for j in range(i + 1, len(mask)):
-                    dist = np.sqrt(np.sum((mask[i] - mask[j])**2))
-                    max_length = max(max_length, dist)
-            
+            length = 0
+            if cls == 'root':
+                length = calculate_skeleton_length(mask, plotted_image.shape[:2])
+            else:
+                length = 0
+                for i in range(len(mask)):
+                    for j in range(i + 1, len(mask)):
+                        dist = np.sqrt(np.sum((mask[i] - mask[j])**2))
+                        length = max(length, dist)
+                
             class_name = class_names.get(int(cls), f'class_{int(cls)}')
+
+            area = calculate_polygon_area(mask)
             
             measurements.append({
                 'class': class_name,
                 'class_id': int(cls),
-                'length_px': max_length,
+                'length_px': length,
+                'area_px': area,
                 'confidence': float(conf),
                 'polygon': mask
             })
     return measurements, image_base64
+
+def getPpc():
+    return 85
 
 def calibrate_camera(calibration_images_folder, chessboard_size=(4, 7)):   
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 
