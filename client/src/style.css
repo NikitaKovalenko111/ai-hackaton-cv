@@ -39,6 +39,12 @@
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
+.main__measures {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 5px;
+}
 .main__popup-trigger {
   max-width: 20px;
   margin: 8px 0;

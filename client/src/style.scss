@@ -43,6 +43,13 @@
 
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 
+    &__measures {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        margin-top: 5px;
+    }
+
     &__popup-trigger {
         max-width: 20px;
         margin: 8px 0;

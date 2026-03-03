@@ -5,13 +5,14 @@ const instance = axios.create({
     baseURL: 'http://94.41.18.199:8080'
 })
 
-export const getPrediction = (file: File, setDetections: (detections: Detections) => void, setFile: (file: string) => void) => {
+export const getPrediction = (file: File, setDetections: (detections: Detections) => void, setFile: (file: string) => void, setType: (type: string) => void) => {
     const formData = new FormData()
 
     formData.append('file', file)
 
     const res = instance.post('/predict', formData).then(res => {
         setDetections(res.data.detections)
+        setType(res.data.type)
 
         const byteCharacters = atob(res.data.image_base64);
         const byteNumbers = new Array(byteCharacters.length);
@@ -30,6 +31,9 @@ export const getPrediction = (file: File, setDetections: (detections: Detections
 
         setFile(url)
     })
+
+    console.log(res);
+    
 
     return res
 }
