@@ -14,6 +14,7 @@ function App() {
   const [labeledFile, setLabeledFile] = useState<string | null>(null)
   const [isVisible, setIsVisible] = useState<boolean>(false)
   const [detections, setDetections] = useState<Detections | null>(null)
+  const [type, setType] = useState<string>('')
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const onDrop = useCallback((acceptedFiles: any) => {
@@ -27,7 +28,7 @@ function App() {
     if (byteFile != null) {
       setIsVisible(false)
       setIsLoading(true)
-      await getPrediction(byteFile, setDetections, setLabeledFile).then(() => {
+      await getPrediction(byteFile, setDetections, setLabeledFile, setType).then(() => {
         setIsVisible(true)
         setIsLoading(false)
       })
@@ -98,14 +99,17 @@ function App() {
             <div className="main__labels">
               <div className="main__label">
                 <h3>Тип растения:</h3>
-                <span>Пшеница</span>
+                <span>{type}</span>
               </div>
               {
                 detections?.map(el => {
                   return (
                     <div className="main__label">
-                      <h3>{el.class_name == 'root' ? 'Длина корня' : el.class_name == 'leaf' ? 'Длина лепестка' : el.class_name == 'stem' ? 'Длина стебля' : ''}</h3>
-                      <span>{el.length_cm} см</span>
+                      <h3>{el.class_name == 'root' ? 'Корень' : el.class_name == 'leaf' ? 'Лепесток' : el.class_name == 'stem' ? 'Стебель' : ''}</h3>
+                      <div className="main__measures">
+                        <span>Длина: {el.length_cm} см</span>
+                        <span>Площадь: {el.area_cm} см^2</span>
+                      </div>
                     </div>
                   )
                 })
