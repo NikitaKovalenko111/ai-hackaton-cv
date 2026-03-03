@@ -7,6 +7,10 @@ from PIL import Image
 from pydantic import BaseModel, field_serializer
 from typing import List
 from ultralytics import YOLO
+
+from model.classificator.classificator import create_dataset_csv, train_classificator
+from model.train import train_model
+from model.utils.model_math import getPpc
 from utils.model_math import measure_objects, calculate_ppc_from_chessboard
 from utils.preprocessing import auto_orient
 from dotenv import load_dotenv
@@ -26,6 +30,8 @@ app.add_middleware(
 BASE_DIR = Path(__file__).resolve().parent
 
 WEIGHTS_PATH = BASE_DIR / "runs" / "segment" / "plant_seg_v2" / "weights" / "best.pt"
+DATASET_PATH = BASE_DIR / "datasets"
+DATASET_MEASURMENTS_PATH = BASE_DIR / "classificator" / "dataset_measurements.csv"
 
 if not WEIGHTS_PATH.exists():
     raise FileNotFoundError(f"Модель не найдена по пути: {WEIGHTS_PATH}")
@@ -33,6 +39,10 @@ if not WEIGHTS_PATH.exists():
 print(f"Загрузка модели из: {WEIGHTS_PATH}")
 
 model = YOLO(str(WEIGHTS_PATH))
+
+create_dataset_csv(DATASET_PATH, model_path=WEIGHTS_PATH, pixels_per_cm=getPpc())
+
+classificator = train_classificator(DATASET_MEASURMENTS_PATH)
 
 print("Модель загружена!")
 
@@ -79,6 +89,8 @@ async def predict(file: UploadFile = File(...)):
 
         results = await asyncio.to_thread(model.predict, img, conf=0.3, save=True, imgsz=640)
         measurements, jpg_bytes = measure_objects(results)
+
+        # pred = await asyncio.to_thread(classificator.predict, )
 
         detections = []
 
