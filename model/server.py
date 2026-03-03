@@ -8,7 +8,7 @@ from pydantic import BaseModel, field_serializer
 from typing import List
 from ultralytics import YOLO
 
-from model.classificator.classificator import create_dataset_csv, train_classificator
+from model.classificator.classificator import create_dataset_csv, train_classificator, prepare_data
 from model.train import train_model
 from model.utils.model_math import getPpc
 from utils.model_math import measure_objects, calculate_ppc_from_chessboard
@@ -29,8 +29,8 @@ app.add_middleware(
 
 BASE_DIR = Path(__file__).resolve().parent
 
-WEIGHTS_PATH = BASE_DIR / "runs" / "segment" / "plant_seg_v2" / "weights" / "best.pt"
-DATASET_PATH = BASE_DIR / "datasets"
+WEIGHTS_PATH = BASE_DIR / "runs" / "segment" / "plant_seg_v22" / "weights" / "best.pt"
+DATASET_PATH = BASE_DIR / "dataset"
 DATASET_MEASURMENTS_PATH = BASE_DIR / "classificator" / "dataset_measurements.csv"
 
 if not WEIGHTS_PATH.exists():
@@ -40,7 +40,7 @@ print(f"Загрузка модели из: {WEIGHTS_PATH}")
 
 model = YOLO(str(WEIGHTS_PATH))
 
-create_dataset_csv(DATASET_PATH, model_path=WEIGHTS_PATH, pixels_per_cm=getPpc())
+create_dataset_csv(DATASET_PATH, model_path=WEIGHTS_PATH, pixels_per_cm=getPpc(), output_csv=DATASET_MEASURMENTS_PATH)
 
 classificator = train_classificator(DATASET_MEASURMENTS_PATH)
 
@@ -51,6 +51,8 @@ class DetectionBox(BaseModel):
     length_px: float
     length_cm: float
     confidence: float
+    area_px: float
+    area_cm: float
 
     @field_serializer('length_px', 'length_cm', 'confidence')
     def round_floats(self, value: float) -> float:
@@ -63,6 +65,7 @@ class PredictionResponse(BaseModel):
     image_width: int
     image_height: int
     image_base64: str
+    type: str
     detections: List[DetectionBox]
 
 @app.post("/predict", response_model=PredictionResponse)
@@ -75,40 +78,40 @@ async def predict(file: UploadFile = File(...)):
         contents = await file.read()
         image = Image.open(io.BytesIO(contents)).convert("RGB")
 
-        File = BASE_DIR / "dataset" / "calibrate" / "calib_10.jpg"
-
-        pixels_per_cm = calculate_ppc_from_chessboard(
-            str(File),
-            chessboard_size=(4, 7),
-            square_size_cm=1.0
-        )
+        pixels_per_cm = getPpc()
         width = image.width
         height = image.height
 
         img = auto_orient(image)
-
         results = await asyncio.to_thread(model.predict, img, conf=0.3, save=True, imgsz=640)
         measurements, jpg_bytes = measure_objects(results)
-
-        # pred = await asyncio.to_thread(classificator.predict, )
-
+        x = prepare_data(measurements, pixels_per_cm)
+        pred = await asyncio.to_thread(classificator.predict, x)
         detections = []
 
         for m in measurements:
+
             print(
                 f"{m['class']}: {m['length_px']:.1f} px, {m['length_px'] / pixels_per_cm} cm (conf: {m['confidence']:.2f})")
             detections.append(DetectionBox(
                 class_name=m['class'],
                 length_px=m['length_px'],
                 length_cm=m['length_px'] / pixels_per_cm,
-                confidence=m['confidence']
+                confidence=m['confidence'],
+                area_px=m['area_px'],
+                area_cm= m['area_px'] / (pixels_per_cm**2),
             ))
+            if pred[0]:
+                type = "Пшеница"
+            else:
+                type = "Руккола"
 
         return PredictionResponse(
             image_width=width,
             image_height=height,
             image_base64=jpg_bytes,
-            detections=detections
+            type=type,
+            detections=detections,
         )
 
     except Exception as e:
