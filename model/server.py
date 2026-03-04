@@ -69,53 +69,57 @@ class PredictionResponse(BaseModel):
     detections: List[DetectionBox]
 
 @app.post("/predict", response_model=PredictionResponse)
-async def predict(file: UploadFile = File(...)):
-    if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="Файл должен быть изображением")
+async def predict(files: List[UploadFile] = File(...)):
+    response = []
 
-    try:
+    for file in files:
+        if not file.content_type.startswith("image/"):
+            raise HTTPException(status_code=400, detail="Файл должен быть изображением")
 
-        contents = await file.read()
-        image = Image.open(io.BytesIO(contents)).convert("RGB")
+        try:
+            contents = await file.read()
+            image = Image.open(io.BytesIO(contents)).convert("RGB")
 
-        pixels_per_cm = getPpc()
-        width = image.width
-        height = image.height
+            pixels_per_cm = getPpc()
+            width = image.width
+            height = image.height
 
-        img = auto_orient(image)
-        results = await asyncio.to_thread(model.predict, img, conf=0.3, save=True, imgsz=640)
-        measurements, jpg_bytes = measure_objects(results)
-        x = prepare_data(measurements, pixels_per_cm)
-        pred = await asyncio.to_thread(classificator.predict, x)
-        detections = []
+            img = auto_orient(image)
+            results = await asyncio.to_thread(model.predict, img, conf=0.3, save=True, imgsz=640)
+            measurements, jpg_bytes = measure_objects(results)
+            x = prepare_data(measurements, pixels_per_cm)
+            pred = await asyncio.to_thread(classificator.predict, x)
+            detections = []
 
-        for m in measurements:
+            for m in measurements:
 
-            print(
-                f"{m['class']}: {m['length_px']:.1f} px, {m['length_px'] / pixels_per_cm} cm (conf: {m['confidence']:.2f})")
-            detections.append(DetectionBox(
-                class_name=m['class'],
-                length_px=m['length_px'],
-                length_cm=m['length_px'] / pixels_per_cm,
-                confidence=m['confidence'],
-                area_px=m['area_px'],
-                area_cm= m['area_px'] / (pixels_per_cm**2),
+                print(
+                    f"{m['class']}: {m['length_px']:.1f} px, {m['length_px'] / pixels_per_cm} cm (conf: {m['confidence']:.2f})")
+                detections.append(DetectionBox(
+                    class_name=m['class'],
+                    length_px=m['length_px'],
+                    length_cm=m['length_px'] / pixels_per_cm,
+                    confidence=m['confidence'],
+                    area_px=m['area_px'],
+                    area_cm= m['area_px'] / (pixels_per_cm**2),
+                ))
+                if pred[0]:
+                    type = "Пшеница"
+                else:
+                    type = "Руккола"
+
+            response.append(PredictionResponse(
+                image_width=width,
+                image_height=height,
+                image_base64=jpg_bytes,
+                type=type,
+                detections=detections,
             ))
-            if pred[0]:
-                type = "Пшеница"
-            else:
-                type = "Руккола"
 
-        return PredictionResponse(
-            image_width=width,
-            image_height=height,
-            image_base64=jpg_bytes,
-            type=type,
-            detections=detections,
-        )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return response
 
 if __name__ == "__main__":
     import uvicorn
