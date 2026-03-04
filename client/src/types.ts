@@ -8,3 +8,11 @@ export interface IDetection {
 }
 
 export type Detections = Array<IDetection>
+
+export interface IObj {
+    detections: Detections
+    type: string
+    img: string
+}
+
+export type ObjectsType = Array<IObj>
