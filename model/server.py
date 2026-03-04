@@ -8,9 +8,9 @@ from pydantic import BaseModel, field_serializer
 from typing import List
 from ultralytics import YOLO
 
-from model.classificator.classificator import create_dataset_csv, train_classificator, prepare_data
-from model.train import train_model
-from model.utils.model_math import getPpc
+from classificator.classificator import create_dataset_csv, train_classificator, prepare_data
+from train import train_model
+from utils.model_math import getPpc
 from utils.model_math import measure_objects, calculate_ppc_from_chessboard
 from utils.preprocessing import auto_orient
 from dotenv import load_dotenv
@@ -85,7 +85,7 @@ async def predict(files: List[UploadFile] = File(...)):
             height = image.height
 
             img = auto_orient(image)
-            results = await asyncio.to_thread(model.predict, img, conf=0.3, save=True, imgsz=640)
+            results = await asyncio.to_thread(model.predict, img, conf=0.4, imgsz=1280)
             measurements, jpg_bytes = measure_objects(results)
             x = prepare_data(measurements, pixels_per_cm)
             pred = await asyncio.to_thread(classificator.predict, x)
