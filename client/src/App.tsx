@@ -1,34 +1,44 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import cn from 'classnames';
 import './style.css'
 import { useDropzone } from 'react-dropzone';
-import type { Detections } from './types';
+import type { ObjectsType } from './types';
 import { getPrediction } from './api/api';
 import preloader from './assets/1200x1200.gif'
 import infoIcon from './assets/info-icon.png'
 import Popup from 'reactjs-popup';
+import type { GalleryItem, ImageGalleryRef } from 'react-image-gallery';
+import ImageGallery from 'react-image-gallery';
+import "react-image-gallery/styles/image-gallery.css";
 
 function App() {
-  const [file, setFile] = useState<string | null>(null)
-  const [byteFile, setByteFile] = useState<File | null>(null)
-  const [labeledFile, setLabeledFile] = useState<string | null>(null)
+  const [files, setFiles] = useState<Array<GalleryItem>>([])
+  const [byteFiles, setByteFiles] = useState<Array<File>>([])
   const [isVisible, setIsVisible] = useState<boolean>(false)
-  const [detections, setDetections] = useState<Detections | null>(null)
-  const [type, setType] = useState<string>('')
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [objects, setObjects] = useState<ObjectsType>([])
 
-  const onDrop = useCallback((acceptedFiles: any) => {
-    const url = URL.createObjectURL(acceptedFiles[0])
+  const onDrop = useCallback((acceptedFiles: Array<File>) => {
+    const urls: Array<GalleryItem> = []
 
-    setFile(url)
-    setByteFile(acceptedFiles[0])
+    acceptedFiles.forEach(file => {
+      const url = URL.createObjectURL(file)
+
+      urls.push({
+        original: url,
+        thumbnail: url
+      })
+    })
+
+    setByteFiles(acceptedFiles)
+    setFiles(urls)
   }, []);
 
   const sendHandler = async () => {
-    if (byteFile != null) {
+    if (byteFiles.length != 0) {
       setIsVisible(false)
       setIsLoading(true)
-      await getPrediction(byteFile, setDetections, setLabeledFile, setType).then(() => {
+      await getPrediction(byteFiles, setObjects).then(() => {
         setIsVisible(true)
         setIsLoading(false)
       })
@@ -36,6 +46,8 @@ function App() {
   }
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
+
+  const galleryRef = useRef<ImageGalleryRef>(null)
 
   return (
     <>
@@ -67,86 +79,62 @@ function App() {
               </div>
             </Popup>
             {
-              file != null ? (
-                <img className='main__preview' src={file} alt="" />
-              ) : (
+              (files.length > 0 && isLoading) && (
+                <img src={files[0].thumbnail} alt="preview" className='main__preview' />
+              )
+            }
+            {
+              (files.length > 0 && !isLoading) ? (
+                <ImageGallery additionalClass='preview' ref={galleryRef} items={files} />
+              ) : (files.length == 0) ? (
                 <div className='main__empty-image'>
                   <span>
                     Изображение не выбрано
                   </span>
                 </div>
-              )
+              ) : ''
             }
             <div {...getRootProps()} className='main__dropzone'>
               <input {...getInputProps()} />
               {
                 isDragActive ?
-                  <p>Поместите изображение сюда</p> :
-                  <p>Поместите сюда изображение или нажмите, чтобы выбрать</p>
+                  <p>Поместите изображения сюда</p> :
+                  <p>Поместите сюда изображения или нажмите, чтобы выбрать</p>
               }
             </div>
             <button className='main__send-button' onClick={sendHandler}>Отправить</button>
           </div>
-          <div className={cn('main__wrapper', 'main__params', { 'main__params--visible': isVisible })}>
-            {
-              labeledFile != null &&
-              (
-                <img className='main__prediction' width="400px" height="400px" src={labeledFile} alt="Разметка изображения" />
-              )
-            }
-            <div className='main__labels-wrapper'>
-              <h2 className="main__header">Параметры</h2>
-              <div className="main__labels">
-                <div className="main__label">
-                  <h3>Тип растения:</h3>
-                  <span>{type}</span>
-                </div>
-                {
-                  detections?.map(el => {
-                    return (
+          {
+            objects.map(obj => {
+              return (
+                <div className={cn('main__wrapper', 'main__params', { 'main__params--visible': isVisible })}>
+                  <img className='main__prediction' width="400px" height="400px" src={obj.img} alt="Разметка изображения" />
+                  <div className='main__labels-wrapper'>
+                    <h2 className="main__header">Параметры</h2>
+                    <div className="main__labels">
                       <div className="main__label">
-                        <h3>{el.class_name == 'root' ? 'Корень' : el.class_name == 'leaf' ? 'Лепесток' : el.class_name == 'stem' ? 'Стебель' : ''}</h3>
-                        <div className="main__measures">
-                          <span>Длина: {el.length_cm} см</span>
-                          <span>Площадь: {el.area_cm} см^2</span>
-                        </div>
+                        <h3>Тип растения:</h3>
+                        <span>{obj.type}</span>
                       </div>
-                    )
-                  })
-                }
-              </div>
-            </div>
-          </div>
-          <div className={cn('main__wrapper', 'main__params', { 'main__params--visible': isVisible })}>
-            {
-              labeledFile != null &&
-              (
-                <img className='main__prediction' width="400px" height="400px" src={labeledFile} alt="Разметка изображения" />
-              )
-            }
-            <div className='main__labels-wrapper'>
-              <h2 className="main__header">Параметры</h2>
-              <div className="main__labels">
-                <div className="main__label">
-                  <h3>Тип растения:</h3>
-                  <span>{type}</span>
+                      {
+                        obj.detections?.map(el => {
+                          return (
+                            <div className="main__label">
+                              <h3>{el.class_name == 'root' ? 'Корень' : el.class_name == 'leaf' ? 'Лепесток' : el.class_name == 'stem' ? 'Стебель' : ''}</h3>
+                              <div className="main__measures">
+                                <span>Длина: {el.length_cm} см</span>
+                                <span>Площадь: {el.area_cm} см^2</span>
+                              </div>
+                            </div>
+                          )
+                        })
+                      }
+                    </div>
+                  </div>
                 </div>
-                {
-                  detections?.map(el => {
-                    return (
-                      <div className="main__label">
-                        <h3>{el.class_name == 'root' ? 'Корень' : el.class_name == 'leaf' ? 'Лепесток' : el.class_name == 'stem' ? 'Стебель' : ''}</h3>
-                        <div className="main__measures">
-                          <span>Длина: {el.length_cm} см</span>
-                          <span>Площадь: {el.area_cm} см^2</span>
-                        </div>
-                      </div>
-                    )
-                  })
-                }
-              </div>
-            </div>
-          </div>
+              )
+            })
+          }
         </div>
       </div>
     </>
