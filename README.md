@@ -32,11 +32,31 @@
 
 Для установки через docker вам понадобится docker и docker-compose:
 
+2.1 Переместить модель в папку model/runs/segment
+
+2.2 Переместить папку dataset в папку model
+
+2.3 Запустить docker compose
+
 ```
 docker compose up --build
 ```
 
 в корне проекта
+
+#### Для запуска frontend нужно:
+
+2.11 В файле client/src/api/api.ts поменять ссылку на свой сервер
+
+2.12 Собрать проект
+
+```
+npm run build
+```
+
+2.13 Переместить содержимое папки dist в var/www/_название_сайта_
+
+**У вас должен быть настроен nginx**
 
 ### 3. Пошаговая установка
 
@@ -75,3 +95,17 @@ pip install -r requirements.txt
 3.7 Для обучения модели запустите train.py
 
 3.8 После обучения переместите папку модели в model/runs/segment
+
+3.9 Запустить server.py
+
+3.10 Запустить бота (bot/main.py), если требуется
+
+3.11 Запустить frontend
+
+```
+npm install
+
+npm run start
+```
+
+в папке client
