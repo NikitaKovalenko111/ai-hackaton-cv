@@ -13,10 +13,14 @@ export const getPrediction = (files: Array<File>, setObjects: (objects: ObjectsT
     })
 
     const res = instance.post('/predict', formData).then(res => {
+        console.log(res);
+        
         const objects: ObjectsType = []
 
         res.data.forEach((obj: any) => {
-            const byteCharacters = atob(res.data.image_base64);
+            const cleanString = obj.image_base64.replace(/^data:image\/[a-z]+;base64,/, "");
+            const normalizedString = cleanString.replace(/\s/g, "");
+            const byteCharacters = atob(normalizedString);        
             const byteNumbers = new Array(byteCharacters.length);
 
             for (let i = 0; i < byteCharacters.length; i++) {
@@ -29,7 +33,7 @@ export const getPrediction = (files: Array<File>, setObjects: (objects: ObjectsT
             const blob = new Blob([byteArray], { type: mimeType });
             const file = new File([blob], 'labeled_image', { type: mimeType });
 
-            const url = URL.createObjectURL(file)
+            const url = URL.createObjectURL(file)    
 
             objects.push({
                 detections: obj.detections,
