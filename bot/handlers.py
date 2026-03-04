@@ -1,4 +1,5 @@
 from aiogram import Router, types, F, Bot
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -50,11 +51,11 @@ async def process_photo(message: types.Message, state: FSMContext, bot: Bot):
 
     try:
         logging.info(f"Отправка запроса на {API_URL}")
-        timeout = aiohttp.ClientTimeout(total=400)
+        timeout = aiohttp.ClientTimeout(total=100)
         async with aiohttp.ClientSession(timeout=timeout) as session:
             data = aiohttp.FormData()
             data.add_field(
-                'file',
+                'files',
                 input_buffer,
                 filename='image.jpg',
             content_type = 'image/jpeg'
@@ -68,17 +69,18 @@ async def process_photo(message: types.Message, state: FSMContext, bot: Bot):
                 if resp.status == 200:
                     try:
                         result = await resp.json()
-                        logging.info(f"JSON получен: {result}")
+                        #logging.info(f"JSON получен: {result}")
                     except Exception as json_err:
                         logging.error(f"Ошибка парсинга JSON: {json_err}")
                         text_resp = await resp.text()
-                        logging.info(f"Текст ответа: {text_resp}")
-                        await msg.edit_text(f"Ошибка API: Некорректный JSON.\n{text_resp[:100]}...")
+                        logging.info(f"Ошибка API: Некорректный JSON: {text_resp}")
+                        msg.delete()
+                        await message.answer(f"Сервер перестал отвечать, повторите позднее")
                         return
-
+                    result = result[0]
                     resp_image_b64 = result.get("image_base64")
                     detections = result.get("detections", [])
-                    lines = ["📊 <b>Результаты анализа:</b>\n"]
+                    lines = [f"📊 <b>Результаты анализа:</b>\n" + f"🌱<b>Тип растения:</b> {result.get('type', 'неизвестно')}\n"]
 
                     class_map = {
                         "root": "Корень",
@@ -96,30 +98,38 @@ async def process_photo(message: types.Message, state: FSMContext, bot: Bot):
                             class_name = class_map.get(raw_class, raw_class.capitalize())
                             length_cm = det.get("length_cm", 0)
                             confidence = det.get("confidence", 0)
-
-                            lines.append(f"{i + 1}) <b>{class_name}</b>: {length_cm} см (Точность: {int(confidence * 100)}%)")
-
+                            area_cm = det.get("area_cm", 0)
+                            lines.append(f"{i + 1}) <b>{class_name}</b>: длина — {length_cm} см, площадь — {round(area_cm, 4)} см² (Точность: {int(confidence * 100)}%)")
                     resp_text = "\n".join(lines)
 
                     if resp_image_b64:
                         logging.info("Есть картинка в base64, декодируем...")
                         image_data = base64.b64decode(resp_image_b64)
-                        await message.answer_photo(
+                        try:
+                            await message.answer_photo(
                             photo=types.BufferedInputFile(image_data, filename="result.png"),
                             caption=resp_text
                         )
+                        except TelegramBadRequest as e:
+                            await message.answer_photo(
+                                photo=types.BufferedInputFile(image_data, filename="result.png"),
+                                caption=lines[0])
+                            await message.answer('\n'.join(lines[1:]))
                         await msg.delete()
-                    else:
-                        logging.info(f"Картинки нет. Текст: {resp_text}")
-                        await msg.edit_text(f"Результат: {resp_text}")
                 else:
                     error_text = await resp.text()
                     logging.error(f"Ошибка сервера {resp.status}: {error_text}")
-                    await msg.edit_text(f"Ошибка сервера: {resp.status}\n{error_text}")
+                    await msg.delete()
+                    await message.answer(f"Ошибка сервера {resp.status} : {'неподходящее изображение' if resp.status == 500 else 'неизвестно'}")
 
+    except TimeoutError or ConnectionError:
+        logging.info("Превышен таймаут")
+        await msg.delete()
+        await message.answer(f"❗️В данный момент поступает много запросов, пожалуйста попробуйте позднее.")
     except Exception as e:
         logging.exception(f"ИСКЛЮЧЕНИЕ: {e}")
-        await msg.edit_text(f"⚠️ Ошибка при обработке.")
+        await msg.delete()
+        await message.answer(f"⚠️ Ошибка при обработке.")
     finally:
         input_buffer.close()
         await state.clear()
