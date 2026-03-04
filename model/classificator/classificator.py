@@ -40,12 +40,12 @@ def create_dataset_csv(dataset_dir, output_csv='./dataset_measurements.csv',
 
     for i, img_path in enumerate(image_paths, 1):
         print(f"[{i}/{len(image_paths)}] {img_path.name}", end=" ... ")
-        results = model.predict(img_path, conf=0.2, imgsz=640)
+        results = model.predict(img_path, conf=0.3, imgsz=640)
 
         measurements = measure_objects(results)
         measurements = measurements[0]
 
-        row = {}
+        row = {'root_length': 0, 'root_area': 0, 'root_length_area_ratio': 0, 'leaf_length': 0, 'leaf_area': 0, 'leaf_length_area_ratio': 0, 'stem_length': 0, 'stem_area': 0, 'stem_length_area_ratio': 0}
 
         for m in measurements:
             if 'arugula' in str(img_path):
