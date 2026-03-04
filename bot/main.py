@@ -14,7 +14,6 @@ async def main():
     dp.include_router(router)
 
     logging.basicConfig(level=logging.INFO)
-    logging.disable()
     await dp.start_polling(bot)
 
 

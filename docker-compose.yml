@@ -14,3 +14,11 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     restart: unless-stopped
+  yolo-bot:
+    build:
+      context: ./bot
+      dockerfile: Dockerfile
+    container_name: yolo-bot
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
