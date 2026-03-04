@@ -68,7 +68,7 @@ class PredictionResponse(BaseModel):
     type: str
     detections: List[DetectionBox]
 
-@app.post("/predict", response_model=List(PredictionResponse))
+@app.post("/predict", response_model=List[PredictionResponse])
 async def predict(files: List[UploadFile] = File(...)):
     response = []
 
