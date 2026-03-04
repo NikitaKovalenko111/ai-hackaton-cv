@@ -6,12 +6,12 @@ def train_model():
 
     results = model.train(
         data='./dataset/data.yaml',
-        epochs=150,
-        imgsz=640,
+        epochs=200,
+        imgsz=1280,
         batch=4,
         device=0,
         workers=8,
-        optimizer='Adam',
+        optimizer='auto',
         patience=50,
         save=True,
         project='./runs/segment',
