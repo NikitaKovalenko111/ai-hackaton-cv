@@ -36,7 +36,9 @@
 
 2.2 Переместить папку dataset в папку model
 
-2.3 Запустить docker compose
+2.3 Для запуска бота требуется создать в папке /bot файл config.py и записать туда BOT_TOKEN=<токен бота>
+
+2.4 Запустить docker compose
 
 ```
 docker compose up --build
@@ -98,7 +100,9 @@ pip install -r requirements.txt
 
 3.9 Запустить server.py
 
-3.10 Запустить бота (bot/main.py), если требуется
+3.10 Запустить бота (bot/main.py), если требуется.
+
+Для запуска бота требуется создать в папке /bot файл config.py и записать туда BOT_TOKEN=<токен бота>
 
 3.11 Запустить frontend
 
