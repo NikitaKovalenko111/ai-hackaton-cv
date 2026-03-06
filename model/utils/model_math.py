@@ -3,46 +3,35 @@ import numpy as np
 import cv2
 import glob
 from pathlib import Path
-from skimage.morphology import medial_axis
-from scipy.spatial import cKDTree
+from skimage.morphology import skeletonize
+from skan import Skeleton, summarize
 
-def create_binary_mask(polygon, img_shape):
-    h, w = img_shape
-    binary = np.zeros((h, w), dtype=np.uint8)
-    cv2.fillPoly(binary, [polygon.astype(np.int32)], 255)
-    return binary
+def get_root_length(mask_param):
+    mask = mask_param
 
-def skeletonize_mask(binary_mask):
-    kernel = np.ones((3, 3), np.uint8)
-    cleaned = cv2.morphologyEx(binary_mask, cv2.MORPH_OPEN, kernel, iterations=1)
+    binary = (mask > 0.5).astype(np.uint8)
     
-    skeleton = cv2.ximgproc.thinning(
-        cleaned, 
-        thinningType=cv2.ximgproc.THINNING_ZHANGSUEN
-    )
-    
-    return skeleton
-
-def calculate_skeleton_length(skeleton):
-    return cv2.countNonZero(skeleton)
-
-def calculate_polygon_area(polygon: np.ndarray) -> float:
-    if len(polygon) < 3:
+    if np.sum(binary) < 5:
         return 0.0
-    
-    x = polygon[:, 0]
-    y = polygon[:, 1]
 
-    area = 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
-    return float(area)
+    skeleton_img = skeletonize(binary > 0)
+
+    if np.sum(skeleton_img) == 0:
+        return 0.0
+
+    branch_data = summarize(Skeleton(skeleton_img))
+    total_length = branch_data['branch-distance'].sum()
+
+    return total_length
 
 def measure_objects(results, class_names={0: 'leaf', 1: 'root', 2: 'stem'}):
     measurements = []
+    res = results[0]
     
     if results[0].masks is not None:
-        masks = results[0].masks.xy
-        classes = results[0].boxes.cls.cpu().numpy()
-        confidences = results[0].boxes.conf.cpu().numpy()
+        masks = res.masks.data.cpu().numpy() 
+        classes = res.boxes.cls.cpu().numpy()
+        confidences = res.boxes.conf.cpu().numpy()
         plotted_image = results[0].plot(
             conf=True,
             line_width=2,
@@ -51,112 +40,59 @@ def measure_objects(results, class_names={0: 'leaf', 1: 'root', 2: 'stem'}):
             labels=True
         )
 
+        orig_h, orig_w = res.orig_shape
+
         _, buffer = cv2.imencode(".jpg", plotted_image)
         jpg_bytes = buffer.tobytes()
         image_base64 = base64.b64encode(jpg_bytes).decode("utf-8")
         
-        for mask, cls, conf in zip(masks, classes, confidences):
-            length = 0
-            if cls == 'root':
-                length = calculate_skeleton_length(mask, plotted_image.shape[:2])
-            else:
-                length = 0
-                for i in range(len(mask)):
-                    for j in range(i + 1, len(mask)):
-                        dist = np.sqrt(np.sum((mask[i] - mask[j])**2))
-                        length = max(length, dist)
+        for i in range(len(masks)):
+            mask = masks[i]
+            cls = classes[i]
+            conf = confidences[i]
+
+            mask_orig_size = cv2.resize(mask, (orig_w, orig_h), interpolation=cv2.INTER_NEAREST)
+            
+            length_px = get_root_length(mask_orig_size)
+            
+            area_px = np.sum(mask_orig_size > 0.5) 
                 
             class_name = class_names.get(int(cls), f'class_{int(cls)}')
-
-            area = calculate_polygon_area(mask)
             
             measurements.append({
                 'class': class_name,
                 'class_id': int(cls),
-                'length_px': length,
-                'area_px': area,
+                'length_px': length_px,
+                'area_px': area_px,
                 'confidence': float(conf),
                 'polygon': mask
             })
     return measurements, image_base64
 
-def getPpc():
-    return 85
+def calculate_ppc_from_chessboard(image_path):
+    image = cv2.imread(image_path)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-def calibrate_camera(calibration_images_folder, chessboard_size=(4, 7)):   
-    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 
-                30, 0.001)
-    
-    objp = np.zeros((chessboard_size[0] * chessboard_size[1], 3), np.float32)
-    objp[:, :2] = np.mgrid[0:chessboard_size[0], 0:chessboard_size[1]].T.reshape(-1, 2)
-    
-    objp *= 1.0
-    
-    objpoints = []
-    imgpoints = []
-    
-    images = list(Path(calibration_images_folder).glob('*.jpg')) + \
-             list(Path(calibration_images_folder).glob('*.png'))
-    
-    print(f"Найдено {len(images)} калибровочных изображений")
-    
-    for fname in images:
-        img = cv2.imread(str(fname))
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        
-        ret, corners = cv2.findChessboardCorners(gray, chessboard_size, None)
-        
-        if ret:
-            objpoints.append(objp)
-            
-            corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
-            imgpoints.append(corners2)
-            
-            cv2.drawChessboardCorners(img, chessboard_size, corners2, ret)
-            print(f"{fname.name}: найдены углы")
-    
-    ret, camera_matrix, dist_coeffs, rvecs, tvecs = cv2.calibrateCamera(
-        objpoints, imgpoints, gray.shape[::-1], None, None
-    )
-    
-    print(f"\nРезультаты калибровки:")
-    print(f"  RMS ошибка: {ret:.4f} пикселей")
-    print(f"  Camera matrix:\n{camera_matrix}")
-    print(f"  Distortion coefficients: {dist_coeffs.ravel()}")
-    
-    fx = camera_matrix[0, 0]
-    fy = camera_matrix[1, 1]
-    pixels_per_cm = (fx + fy) / 2
-    
-    print(f"\nPixels per cm: {pixels_per_cm:.2f}")
-    
-    return camera_matrix, dist_coeffs, pixels_per_cm
+    pattern_size = (7, 4) 
 
-def calculate_ppc_from_chessboard(image_path, chessboard_size=(4, 7), square_size_cm=1.0):
-    img = cv2.imread(image_path)
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    
-    ret, corners = cv2.findChessboardCorners(gray, chessboard_size)
-    
+    ret, corners = cv2.findChessboardCorners(gray, pattern_size, None)
+
     if ret:
         criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
-        corners = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
+        corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
+
+        distances = []
         
-        width_px = corners[-1][0][0] - corners[0][0][0]
-        height_px = corners[-chessboard_size[0]][0][1] - corners[0][0][1]
+        for i in range(len(corners2) - 1):
+            if (i + 1) % pattern_size[0] != 0:
+                d = np.linalg.norm(corners2[i] - corners2[i+1])
+                distances.append(d)
+                
+        ppcm = np.mean(distances)
         
-        width_cm = chessboard_size[0] * square_size_cm
-        height_cm = chessboard_size[1] * square_size_cm
+        print(f"Среднее количество пикселей на 1 см (PPCM): {ppcm:.2f}")
         
-        ppc_width = width_px / width_cm
-        ppc_height = height_px / height_cm
-        pixels_per_cm = (ppc_width + ppc_height) / 2
-        
-        print(f"Ширина: {width_px:.0f} px = {width_cm:.1f} см → {ppc_width:.2f} px/cm")
-        print(f"Высота: {height_px:.0f} px = {height_cm:.1f} см → {ppc_height:.2f} px/cm")
-        print(f"pixels_per_cm = {pixels_per_cm:.2f}")
-        
-        return pixels_per_cm
+        return ppcm
     else:
-        print("Углы не найдены")
+        print("Не удалось найти углы. Попробуйте улучшить освещение или яркость.")
         return None
