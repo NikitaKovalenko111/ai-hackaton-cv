@@ -38,11 +38,19 @@ async def process_help(message: types.Message | types.CallbackQuery):
         await message.answer(text, reply_markup=kb.main)
 
 
-@router.message(PhotoState.waiting_for_photo, F.photo)
+@router.message(PhotoState.waiting_for_photo, F.photo | F.document)
 async def process_photo(message: types.Message, state: FSMContext, bot: Bot):
+    logging.info(message.document)
+    if message.document and not (message.document.mime_type and "image/" in message.document.mime_type):
+        logging.info(f"Получен неподдерживаемый тип файла: {message.document.mime_type}")
+        return
+
     logging.info("Начало обработки фото")
     input_buffer = io.BytesIO()
-    await bot.download(message.photo[-1], destination=input_buffer)
+    if message.photo:
+        await bot.download(message.photo[-1], destination=input_buffer)
+    else:
+        await bot.download(message.document, destination=input_buffer)
     input_buffer.seek(0)
     logging.info("Фото скачано в буфер")
 
