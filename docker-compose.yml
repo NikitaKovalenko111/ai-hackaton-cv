@@ -6,6 +6,7 @@ services:
       context: ./model
       dockerfile: Dockerfile
     container_name: yolo-detection-api
+    network_mode: "host"
     ports:
       - "8080:8080"
     volumes:
