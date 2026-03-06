@@ -8,7 +8,6 @@ import aiohttp
 import base64
 import logging
 
-
 from config import API_URL
 import keyboard as kb
 
