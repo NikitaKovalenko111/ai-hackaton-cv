@@ -20,7 +20,7 @@ class PhotoState(StatesGroup):
 @router.callback_query(F.data == "load_photo")
 @router.message(F.text == "Отправить фото")
 async def process_load_photo(message: types.Message | types.CallbackQuery, state: FSMContext):
-    text = "Пожалуйста, отправьте фотографию растения для анализа."
+    text = "Пожалуйста, отправьте фотографию растения для анализа.(рекомендуется отправлять без сжатия, в виде файла)"
     if isinstance(message, types.CallbackQuery):
         await message.message.answer(text, reply_markup=kb.main)
         await message.answer()
