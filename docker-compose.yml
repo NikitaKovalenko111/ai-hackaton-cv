@@ -16,6 +16,7 @@ services:
       - PYTHONUNBUFFERED=1
     restart: unless-stopped
   yolo-bot:
+    network_mode: "host"
     build:
       context: ./bot
       dockerfile: Dockerfile
