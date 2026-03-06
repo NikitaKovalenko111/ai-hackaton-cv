@@ -8,5 +8,5 @@ COPY . .
 
 EXPOSE 3001
 
-CMD ['python', 'main.py']
+CMD ["python", "main.py"]
 
