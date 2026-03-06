@@ -11,13 +11,15 @@ img_path = input()
 
 model = YOLO(model_path)
 
-results = model.predict(img_path, save=True, conf=0.1)
+ppc = model_math.calculate_ppc_from_chessboard('model/calib_10.jpg')
+
+results = model.predict(img_path, save=True, conf=0.3)
 
 measures = model_math.measure_objects(results)
 
 for m in measures[0]:
     print(f"Класс: {m['class']}")
     print(f"Длина в пикселях: {m['length_px']}")
-    print(f"Длина в сантиметрах: {m['length_px'] / model_math.getPpc()}")
+    print(f"Длина в сантиметрах: {m['length_px'] / ppc}")
     print(f"Площадь в пикселях: {m['area_px']}")
-    print(f"Площадь в сантиметрах: {m['area_px'] / (model_math.getPpc() ** 2)}")
+    print(f"Площадь в сантиметрах: {m['area_px'] / (ppc**2)}")
