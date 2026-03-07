@@ -13,6 +13,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 1000;
 
     &__image {
         max-width: 300px;
@@ -36,12 +37,50 @@
     margin-bottom: 20px;
     max-width: calc(100% - 16px);
     flex-direction: column;
+    position: relative;
 
     padding: 15px 0 0 0;
     border-radius: 15px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+
+    &__info-btn {
+        display: inline-flex;
+        position: absolute;
+        align-items: center;
+        top: 15px;
+        right: 15px;
+        justify-content: center;
+        cursor: pointer;
+        border: green solid 2px;
+        background: transparent;
+        outline: none;
+        
+        border-radius: 50%;
+        width: 20px;
+        aspect-ratio: 1 / 1;
+        
+        color: green;
+        font-size: 12px;
+        transition: all 0.2s ease-in-out;
+
+        &:hover {
+            background-color: green;
+            color: #ffffff;
+            
+            box-shadow: 0 4px 10px rgba(green, 0.3);
+        }
+    }
+
+    &__prediction {
+        @media screen and (max-width: 500px) {
+            max-width: 400px !important;
+            max-height: 400px !important;
+        }
+
+
+    }
 
     &__measures {
         display: flex;
@@ -66,6 +105,10 @@
         border-radius: 15px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+        @media screen and (max-width: 500px) {
+            max-width: 300px;
+        }
     }
 
     &__popup-header {
