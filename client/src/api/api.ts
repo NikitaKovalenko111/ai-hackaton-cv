@@ -1,8 +1,9 @@
 import axios from "axios";
 import type { ObjectsType } from "../types";
+import toast from "react-hot-toast";
 
 const instance = axios.create({
-    baseURL: 'http://94.41.18.199:8080'
+    baseURL: 'http://94.41.18.199:3000/api'
 })
 
 export const getPrediction = (files: Array<File>, setObjects: (objects: ObjectsType) => void) => {
@@ -13,8 +14,6 @@ export const getPrediction = (files: Array<File>, setObjects: (objects: ObjectsT
     })
 
     const res = instance.post('/predict', formData).then(res => {
-        console.log(res);
-        
         const objects: ObjectsType = []
 
         res.data.forEach((obj: any) => {
@@ -43,6 +42,10 @@ export const getPrediction = (files: Array<File>, setObjects: (objects: ObjectsT
 
             setObjects(objects)
         })
+
+        toast.success('Изображение успешно обработано!')
+    }).catch(() => {
+        toast.error('Ошибка при обработке изображения')
     })
 
 
