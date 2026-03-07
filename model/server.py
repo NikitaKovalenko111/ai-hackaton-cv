@@ -86,7 +86,7 @@ async def predict(files: List[UploadFile] = File(...)):
             height = image.height
 
             img = auto_orient(image)
-            results = await asyncio.to_thread(model.predict, img, conf=0.3, imgsz=1280)
+            results = await asyncio.to_thread(model.predict, img, conf=0.25, iou=0.75, imgsz=1280, retina_masks=True)
             measurements, jpg_bytes = measure_objects(results)
             x = prepare_data(measurements, pixels_per_cm)
             pred = await asyncio.to_thread(classificator.predict, x)
