@@ -6,7 +6,7 @@ def train_model():
 
     results = model.train(
         data='./dataset/data.yaml',
-        epochs=200,
+        epochs=300,
         imgsz=1280,
         batch=4,
         device=0,
@@ -15,9 +15,10 @@ def train_model():
         patience=50,
         save=True,
         project='./runs/segment',
-        name='plant_seg_v2',
+        name='plant_seg_v66',
         verbose=True,
-        close_mosaic=10,
+        close_mosaic=15,
+        mask_ratio=2,
 
         mosaic=0.5,
         copy_paste=0.3,
