@@ -6,6 +6,7 @@ services:
       context: ./model
       dockerfile: Dockerfile
     container_name: yolo-detection-api
+    network_mode: "host"
     ports:
       - "8080:8080"
     volumes:
@@ -13,4 +14,13 @@ services:
       - ./.env:/app/.env
     environment:
       - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+  yolo-bot:
+    network_mode: "host"
+    build:
+      context: ./bot
+      dockerfile: Dockerfile
+    container_name: yolo-bot
+    ports:
+      - "3001:3001"
     restart: unless-stopped
