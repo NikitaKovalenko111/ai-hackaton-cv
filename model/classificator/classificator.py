@@ -40,7 +40,7 @@ def create_dataset_csv(dataset_dir, output_csv='./dataset_measurements.csv',
 
     for i, img_path in enumerate(image_paths, 1):
         print(f"[{i}/{len(image_paths)}] {img_path.name}", end=" ... ")
-        results = model.predict(img_path, conf=0.3, imgsz=640)
+        results = model.predict(img_path, conf=0.1, imgsz=1280)
 
         measurements = measure_objects(results)
         measurements = measurements[0]

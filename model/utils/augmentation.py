@@ -161,6 +161,6 @@ class ArugulaAugmenter:
 if __name__ == '__main__':
     augmenter = ArugulaAugmenter(
         dataset_path='model/dataset',
-        multiplier=5 
+        multiplier=7 
     )
     augmenter.augment()
